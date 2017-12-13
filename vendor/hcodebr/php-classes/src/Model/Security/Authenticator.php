@@ -10,6 +10,7 @@ namespace Hcode\Model\Security;
 
 use \Hcode\Factory\UserFactory;
 use \Hcode\DAO\UserDAO;
+use Hcode\Model\User;
 
 
 class Authenticator
@@ -19,37 +20,26 @@ class Authenticator
     public static function login($login, $password)
     {
         $userDAO = new UserDAO();
-        $results = $userDAO->getByLogin([":LOGIN" => $login]);
 
-        if (count($results) > 0) {
-            $data = $results[0];
-            if (password_verify($password, $data["despassword"])) {
-                $user = UserFactory::create($data);
+        $user = $userDAO->getByLogin($login);
 
-                $_SESSION[Authenticator::SESSION] = $user->getValues();
-
-            } else {
-                throw new \Exception("Usuário inexistente ou senha inválida");
-            }
+        if (isset($user) && password_verify($password, $user->getDespassword())) {
+            $_SESSION[Authenticator::SESSION] = serialize($user);
         } else {
             throw new \Exception("Usuário inexistente ou senha inválida");
         }
+
     }
 
     public static function verifyLogin()
     {
-        if (
-            !isset($_SESSION[Authenticator::SESSION])
-            ||
-            !$_SESSION[Authenticator::SESSION]
-            ||
-            !(int)$_SESSION[Authenticator::SESSION]["iduser"] > 0
-            ||
-            (bool)$_SESSION[Authenticator::SESSION]["inadmin"] != 1
-        ) {
+        $user = unserialize($_SESSION[Authenticator::SESSION]);
+
+        if (!isset($user) || !$user instanceof User || !(int)$user->getIduser() > 0 || (bool)$user->getInadmin() != 1) {
             header("Location: /admin/login");
             exit;
         }
+
     }
 
     public static function logout()

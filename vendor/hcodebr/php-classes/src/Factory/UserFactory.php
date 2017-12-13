@@ -7,18 +7,21 @@
  */
 
 namespace Hcode\Factory;
+
 use \Hcode\Model\User;
 
-class UserFactory
+
+class UserFactory extends Factory
 {
-    public static function create($attributes = array()) : User
+    public static function create($attributes = array(), $className = "User"): User
     {
-        $user = new User();
+        $user = parent::create($attributes, $className);
 
-        foreach ($attributes as $key => $attr){
-            $user->{"set".ucfirst($key)}($attr);
+        if ($user instanceof User) {
+            $person = PersonFactory::create($attributes);
+            $user->setPerson($person);
+
         }
-
 
         return $user;
     }

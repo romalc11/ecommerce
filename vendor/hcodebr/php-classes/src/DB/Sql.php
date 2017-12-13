@@ -16,6 +16,8 @@ class Sql
             "mysql:dbname=" . Sql::DBNAME . ";host=" . Sql::HOSTNAME,
             Sql::USERNAME,
             Sql::PASSWORD
+
+
         );
     }
 

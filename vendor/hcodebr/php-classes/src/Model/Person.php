@@ -2,107 +2,83 @@
 /**
  * Created by PhpStorm.
  * User: romal
- * Date: 08/12/2017
- * Time: 18:20
+ * Date: 10/12/2017
+ * Time: 12:36
  */
 
 namespace Hcode\Model;
 
-use \Hcode\Model\Person;
 
-class User implements AllFields
+class Person implements AllFields
 {
-    private $iduser;
-    private $person;
-    private $deslogin;
-    private $despassword;
-    private $inadmin;
+    private $idperson;
+    private $desperson;
+    private $desemail;
+    private $nrphone;
     private $dtregister;
 
-
-    public function __construct()
-    {
-        $this->person = new Person();
-    }
-
     /**
      * @return mixed
      */
-    public function getIduser()
+    public function getIdperson()
     {
-        return $this->iduser;
-    }
-
-    /**
-     * @param mixed $iduser
-     */
-    public function setIduser($iduser)
-    {
-        $this->iduser = $iduser;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getPerson(): Person
-    {
-        return $this->person;
+        return $this->idperson;
     }
 
     /**
      * @param mixed $idperson
      */
-    public function setPerson($person)
+    public function setIdperson($idperson)
     {
-        $this->person = $person;
+        $this->idperson = $idperson;
     }
 
     /**
      * @return mixed
      */
-    public function getDeslogin()
+    public function getDesperson()
     {
-        return $this->deslogin;
+        return $this->desperson;
     }
 
     /**
-     * @param mixed $deslogin
+     * @param mixed $desperson
      */
-    public function setDeslogin($deslogin)
+    public function setDesperson($desperson)
     {
-        $this->deslogin = $deslogin;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getDespassword()
-    {
-        return $this->despassword;
-    }
-
-    /**
-     * @param mixed $despassword
-     */
-    public function setDespassword($despassword)
-    {
-        $this->despassword = $despassword;
+        $this->desperson = $desperson;
     }
 
     /**
      * @return mixed
      */
-    public function getInadmin()
+    public function getDesemail()
     {
-        return $this->inadmin;
+        return $this->desemail;
     }
 
     /**
-     * @param mixed $inadmin
+     * @param mixed $desemail
      */
-    public function setInadmin($inadmin)
+    public function setDesemail($desemail)
     {
-        $this->inadmin = $inadmin;
+        $this->desemail = $desemail;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getNrphone()
+    {
+        return $this->nrphone;
+    }
+
+    /**
+     * @param mixed $nrphone
+     */
+    public function setNrphone($nrphone)
+    {
+        $this->nrphone = $nrphone;
     }
 
     /**
@@ -118,7 +94,6 @@ class User implements AllFields
      */
     public function setDtregister($dtregister)
     {
-        $this->person->setDtregister($dtregister);
         $this->dtregister = $dtregister;
     }
 
@@ -146,4 +121,6 @@ class User implements AllFields
         return $values;
 
     }
+
+
 }

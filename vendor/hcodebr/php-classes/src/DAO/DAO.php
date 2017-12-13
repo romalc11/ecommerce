@@ -9,6 +9,7 @@
 namespace Hcode\DAO;
 
 use \Hcode\DB\Sql;
+use PDOStatement;
 
 
 abstract class DAO
@@ -22,39 +23,33 @@ abstract class DAO
     }
 
 
+    private function setParams($statement, $parameters = array())
+    {
+        foreach ($parameters as $key => $value) {
+
+            $this->bindParam($statement, $key, $value);
+        }
+    }
+
+    private function bindParam( PDOStatement $statement, $key, $value)
+    {
+        $statement->bindParam($key, $value);
+    }
+
     public function query($rawQuery, $params = array())
     {
-
         $stmt = $this->conn->prepare($rawQuery);
-
-        foreach ($params as $key => $value) {
-
-            $stmt->bindParam($key, $value);
-
-        }
-
+        $this->setParams($stmt, $params);
         $stmt->execute();
-
-        return $stmt;
-
     }
 
-    public function selectAll($tableName): array
+    public function select($rawQuery, $params = array()): array
     {
-        return $this->returnQuery("SELECT * FROM " . $tableName);
-    }
-
-    public function returnQuery($rawQuery, $params = array())
-    {
-        $stmt = $this->query($rawQuery, $params);
+        $stmt = $this->conn->prepare($rawQuery);
+        $this->setParams($stmt, $params);
+        $stmt->execute();
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
-
-    abstract public function delete($data = array());
-
-    abstract public function save($data = array());
-
-    abstract public function update($data = array());
 
 
 }
