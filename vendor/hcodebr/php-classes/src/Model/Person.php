@@ -17,6 +17,8 @@ class Person implements AllFields
     private $nrphone;
     private $dtregister;
 
+    use GetValues;
+
     /**
      * @return mixed
      */
@@ -95,31 +97,6 @@ class Person implements AllFields
     public function setDtregister($dtregister)
     {
         $this->dtregister = $dtregister;
-    }
-
-    public function getDirectValues()
-    {
-        return get_object_vars($this);
-    }
-
-    public function getDiscriminatedValues()
-    {
-        $values = $this->getDirectValues();
-        $objectValues = array();
-
-        foreach ($values as $key => $value) {
-            if (is_object($value) && $value instanceof AllFields) {
-                array_push($objectValues, $value->getDiscriminatedValues());
-                unset($values[$key]);
-            }
-        }
-
-        foreach ($objectValues as $value) {
-            $values = array_merge($values, $value);
-        }
-
-        return $values;
-
     }
 
 

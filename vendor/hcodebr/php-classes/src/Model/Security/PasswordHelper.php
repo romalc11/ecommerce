@@ -8,7 +8,6 @@
 
 namespace Hcode\Model\Security;
 
-use Defuse\Crypto\Crypto;
 use Hcode\DAO\UserDAO;
 use Hcode\Mailer;
 use Hcode\Model\User;
@@ -27,7 +26,6 @@ class PasswordHelper
         if (isset($user)) {
             $recoveryData = $userDAO->createRecovery($user->getIduser(), $_SERVER["REMOTE_ADDR"]);
             if (isset($recoveryData)) {
-                $iv = openssl_random_pseudo_bytes(16);
                 $code = base64_encode(openssl_encrypt($recoveryData['idrecovery'], "AES-256-CBC", self::SECRET, 0, self::SECRETIV));
                 $link = "http://localhost/admin/forgot/reset?code=$code";
 

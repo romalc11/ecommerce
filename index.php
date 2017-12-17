@@ -9,38 +9,34 @@
 session_start();
 require_once("vendor/autoload.php");
 
+use Hcode\DAO\CategoryDAO;
 use \Slim\Slim;
-use \Hcode\Page;
-use \Hcode\PageAdmin;
 use \Hcode\Model\Security\Authenticator;
 use \Hcode\DAO\UserDAO;
-use \Hcode\Factory\UserFactory;
 use \Hcode\Model\Security\PasswordHelper;
-
+use \Hcode\Builder\PageBuilder;
 
 $app = new Slim();
 $app->config('debug', true);
 
+
 $app->get('/', function () {
-    $page = new Page();
-    $page->setTpl("index");
+    (new PageBuilder()) ->withTpl('index') ->build();
 });
 
 $app->get('/admin', function () {
     Authenticator::verifyLogin();
 
-    $page = new PageAdmin();
-    $page->setTpl("index");
+    (new PageBuilder()) ->withHeader()
+                        ->withFooter()
+                        ->withTpl('index')
+                        ->build(true);
+
 });
 
 $app->get('/admin/login', function () {
-
-    $page = new PageAdmin([
-        "header" => false,
-        "footer" => false
-    ]);
-
-    $page->setTpl("login");
+    (new PageBuilder()) ->withTpl("login")
+                        ->build(true);
 });
 
 $app->post('/admin/login', function () {
@@ -57,28 +53,29 @@ $app->get('/admin/logout', function () {
 
 $app->get('/admin/users', function () {
     Authenticator::verifyLogin();
-    $userDAO = new UserDAO();
 
-    $users = $userDAO->joinSelect();
+    $users = (new UserDAO())->joinSelect();
 
-    $page = new PageAdmin();
-
-    $page->setTpl("users", array(
-        "users" => $users
-    ));
+    (new PageBuilder()) ->withData(['users' => $users])
+                        ->withHeader()
+                        ->withFooter()
+                        ->withTpl('users')
+                        ->build(true);
 });
 
 $app->get('/admin/users/create', function () {
     Authenticator::verifyLogin();
-    $page = new PageAdmin();
 
-    $page->setTpl("users-create");
+    (new PageBuilder()) ->withTpl('users-create')
+                        ->withHeader()
+                        ->withFooter()
+                        ->build(true);
+
 });
 
 $app->get('/admin/users/:iduser/delete', function ($iduser) {
     Authenticator::verifyLogin();
-    $userDAO = new UserDAO();
-    $userDAO->delete($iduser);
+    (new UserDAO())->delete($iduser);
 
     header("Location: /admin/users");
     exit;
@@ -87,12 +84,15 @@ $app->get('/admin/users/:iduser/delete', function ($iduser) {
 
 $app->get('/admin/users/:iduser', function ($iduser) {
     Authenticator::verifyLogin();
-    $page = new PageAdmin();
 
-    $userDAO = new UserDAO();
-    $user = $userDAO->getById($iduser);
-    var_dump($user->getDiscriminatedValues());
-    $page->setTpl("users-update", array("user" => $user->getDiscriminatedValues()));
+    $user = (new UserDAO())->getById($iduser);
+
+    (new PageBuilder()) ->withData(["user" => $user->getDiscriminatedValues()])
+                        ->withHeader()
+                        ->withFooter()
+                        ->withTpl('users-update')
+                        ->build(true);
+
 });
 
 $app->post('/admin/users/create', function () {
@@ -101,8 +101,7 @@ $app->post('/admin/users/create', function () {
     $_POST['despassword'] = password_hash($_POST['despassword'], PASSWORD_DEFAULT);
     $_POST["inadmin"] = (isset($_POST["inadmin"])) ? 1 : 0;
 
-    $userDAO = new UserDAO();
-    $userDAO->save($_POST);
+    (new UserDAO())->save($_POST);
 
     header("Location: /admin/users");
     exit;
@@ -119,7 +118,6 @@ $app->post('/admin/users/:iduser', function ($iduser) {
     $_POST['despassword'] = $user->getDespassword();
     $_POST['inadmin'] = (isset($_POST["inadmin"])) ? 1 : 0;
 
-    $userDAO = new UserDAO();
     $userDAO->update($_POST);
 
     header("Location: /admin/users");
@@ -127,21 +125,15 @@ $app->post('/admin/users/:iduser', function ($iduser) {
 });
 
 $app->get('/admin/forgot', function () {
-    $page = new PageAdmin([
-        "header" => false,
-        "footer" => false
-    ]);
 
-    $page->setTpl("forgot");
+    (new PageBuilder()) ->withTpl('forgot')
+                        ->build(true);
+
 });
 
 $app->get('/admin/forgot/sent', function () {
-    $page = new PageAdmin([
-        "header" => false,
-        "footer" => false
-    ]);
-
-    $page->setTpl("forgot-sent");
+    (new PageBuilder()) ->withTpl('forgot-sent')
+                        ->build(true);
 });
 
 $app->post('/admin/forgot', function () {
@@ -155,35 +147,75 @@ $app->get('/admin/forgot/reset', function () {
     $data = PasswordHelper::validRecovery($_GET['code']);
 
     if (isset($data)) {
-        $page = new PageAdmin([
-            "header" => false,
-            "footer" => false
-        ]);
+        (new PageBuilder()) ->withData(['name' => $data['desperson'], 'code' => $_GET['code']])
+                            ->withTpl('forgot-reset')
+                            ->build(true);
 
-        $page->setTpl("forgot-reset", array(
-            "name" => $data['desperson'],
-            "code" => $_GET['code']
-        ));
     } else {
         throw new \Exception("Não foi possivel recuperar a senha");
     }
 
 });
 
-$app->post('/admin/forgot/reset', function(){
+$app->post('/admin/forgot/reset', function () {
     $data = PasswordHelper::validRecovery($_POST['code']);
 
-    if(isset($data)) {
+    if (isset($data)) {
         PasswordHelper::recovery($data['idrecovery'], $data['iduser'], $_POST['password']);
-
-        $page = new PageAdmin([
-            "header" => false,
-            "footer" => false
-        ]);
-
-        $page->setTpl("forgot-reset-success");
+        (new PageBuilder()) ->withTpl("forgot-reset-success")
+                            ->build(true);
     }
 });
 
+$app->get('/admin/categories', function () {
+
+    $categories = (new CategoryDAO())->selectAll();
+
+    (new PageBuilder()) ->withHeader()
+                        ->withFooter()
+                        ->withData(["categories" => $categories])
+                        ->withTpl('categories')
+                        ->build(true);
+
+});
+
+$app->get('/admin/categories/create', function (){
+    (new PageBuilder()) ->withHeader()
+                        ->withFooter()
+                        ->withTpl('categories-create')
+                        ->build(true);
+});
+
+$app->post('/admin/categories/create', function (){
+    (new CategoryDAO()) ->save(["descategory" => $_POST['descategory']]);
+    header('Location:  /admin/categories');
+    exit;
+});
+
+$app->get("/admin/categories/:idcategory/delete", function ($idcategory){
+    (new CategoryDAO())->delete($idcategory);
+    header("Location: /admin/categories");
+    exit;
+});
+
+$app->get("/admin/categories/:idcategory", function ($idcategory){
+    $category = (new CategoryDAO())->getById($idcategory);
+    if(isset($category)){
+        (new PageBuilder()) ->withHeader()
+                            ->withFooter()
+                            ->withData(["category" => $category->getDirectValues()])
+                            ->withTpl("categories-update")
+                            ->build(true);
+    }
+
+
+});
+
+$app->post("/admin/categories/:idcategory", function ($idcategory){
+    $_POST['idcategory'] = $idcategory;
+    (new CategoryDAO())->save($_POST);
+    header("Location: /admin/categories");
+    exit;
+});
 
 $app->run();

@@ -12,5 +12,6 @@ namespace Hcode\Model;
 interface AllFields
 {
     public function getDirectValues();
+
     public function getDiscriminatedValues();
 }

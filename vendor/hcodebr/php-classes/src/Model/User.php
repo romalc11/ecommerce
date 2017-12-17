@@ -19,6 +19,8 @@ class User implements AllFields
     private $inadmin;
     private $dtregister;
 
+    use GetValues;
+
 
     public function __construct()
     {
@@ -122,28 +124,4 @@ class User implements AllFields
         $this->dtregister = $dtregister;
     }
 
-    public function getDirectValues()
-    {
-        return get_object_vars($this);
-    }
-
-    public function getDiscriminatedValues()
-    {
-        $values = $this->getDirectValues();
-        $objectValues = array();
-
-        foreach ($values as $key => $value) {
-            if (is_object($value) && $value instanceof AllFields) {
-                array_push($objectValues, $value->getDiscriminatedValues());
-                unset($values[$key]);
-            }
-        }
-
-        foreach ($objectValues as $value) {
-            $values = array_merge($values, $value);
-        }
-
-        return $values;
-
-    }
 }

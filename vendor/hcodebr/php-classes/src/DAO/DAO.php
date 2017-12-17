@@ -51,5 +51,18 @@ abstract class DAO
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    /**
+     * @param $data
+     * @return mixed
+     */
+    protected function formatParameters($data): array
+    {
+        foreach ($data as $key => $values) {
+            $data[':' . $key] = $data[$key];
+            unset($data[$key]);
+        }
+        return $data;
+    }
+
 
 }

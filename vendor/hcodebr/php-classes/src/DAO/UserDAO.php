@@ -26,18 +26,20 @@ class UserDAO extends DAO
         $this->query("CALL sp_users_delete(:iduser)", array(":iduser" => $iduser));
     }
 
-    public function save($data = array()): array
+    public function save($data = array()): ?User
     {
-        $formattedData = $this->formatParameters($data);
-        $results = $this->select("CALL sp_users_save(:desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", $formattedData);
+        $results = $this->select("CALL sp_users_save(:desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", $this->formatParameters($data));
 
-        return $results[0];
+        if (count($results) > 0) {
+            return UserFactory::create($results[0]);
+        }
+
+        return NULL;
     }
 
     public function update($data = array()): ?User
     {
-        $formattedData = $this->formatParameters($data);
-        $results = $this->select("CALL sp_usersupdate_save(:iduser, :desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", $formattedData);
+        $results = $this->select("CALL sp_usersupdate_save(:iduser, :desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", $this->formatParameters($data));
 
         if (count($results) > 0) {
             return UserFactory::create($results[0]);
@@ -82,7 +84,7 @@ class UserDAO extends DAO
         return NULL;
     }
 
-    public function createRecovery($iduser, $desip): array
+    public function createRecovery($iduser, $desip): ?array
     {
         $results = $this->select("CALL sp_userspasswordsrecoveries_create(:iduser, :desip)", array(
             ":iduser" => $iduser,
@@ -121,20 +123,6 @@ class UserDAO extends DAO
     public function joinSelect()
     {
         return $this->select("SELECT * FROM tb_users a INNER JOIN tb_persons b USING(idperson) ORDER BY desperson");
-    }
-
-
-    /**
-     * @param $data
-     * @return mixed
-     */
-    private function formatParameters($data): array
-    {
-        foreach ($data as $key => $values) {
-            $data[':' . $key] = $data[$key];
-            unset($data[$key]);
-        }
-        return $data;
     }
 
     public function setRecoveryUsed($idrecovery)

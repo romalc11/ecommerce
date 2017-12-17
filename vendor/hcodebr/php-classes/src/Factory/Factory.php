@@ -9,6 +9,7 @@
 namespace Hcode\Factory;
 
 use Hcode\Model\AllFields;
+use Hcode\Model\Model;
 
 abstract class Factory
 {

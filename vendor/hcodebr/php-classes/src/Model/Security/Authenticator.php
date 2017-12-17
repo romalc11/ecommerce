@@ -22,7 +22,6 @@ class Authenticator
         $userDAO = new UserDAO();
 
         $user = $userDAO->getByLogin($login);
-
         if (isset($user) && password_verify($password, $user->getDespassword())) {
             $_SESSION[Authenticator::SESSION] = serialize($user);
         } else {
@@ -33,12 +32,18 @@ class Authenticator
 
     public static function verifyLogin()
     {
-        $user = unserialize($_SESSION[Authenticator::SESSION]);
+        if (isset($_SESSION[Authenticator::SESSION])) {
+            $user = unserialize($_SESSION[Authenticator::SESSION]);
 
-        if (!isset($user) || !$user instanceof User || !(int)$user->getIduser() > 0 || (bool)$user->getInadmin() != 1) {
+            if (!isset($user) || !$user instanceof User || !(int)$user->getIduser() > 0 || (bool)$user->getInadmin() != 1) {
+                header("Location: /admin/login");
+                exit;
+            }
+        } else{
             header("Location: /admin/login");
             exit;
         }
+
 
     }
 
