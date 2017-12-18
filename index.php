@@ -21,7 +21,10 @@ $app->config('debug', true);
 
 
 $app->get('/', function () {
-    (new PageBuilder()) ->withTpl('index') ->build();
+    (new PageBuilder()) ->withTpl('index')
+                        ->withHeader()
+                        ->withFooter()
+                        ->build();
 });
 
 $app->get('/admin', function () {
@@ -169,6 +172,7 @@ $app->post('/admin/forgot/reset', function () {
 
 $app->get('/admin/categories', function () {
 
+    Authenticator::verifyLogin();
     $categories = (new CategoryDAO())->selectAll();
 
     (new PageBuilder()) ->withHeader()
@@ -180,6 +184,7 @@ $app->get('/admin/categories', function () {
 });
 
 $app->get('/admin/categories/create', function (){
+    Authenticator::verifyLogin();
     (new PageBuilder()) ->withHeader()
                         ->withFooter()
                         ->withTpl('categories-create')
@@ -187,18 +192,21 @@ $app->get('/admin/categories/create', function (){
 });
 
 $app->post('/admin/categories/create', function (){
+    Authenticator::verifyLogin();
     (new CategoryDAO()) ->save(["descategory" => $_POST['descategory']]);
     header('Location:  /admin/categories');
     exit;
 });
 
 $app->get("/admin/categories/:idcategory/delete", function ($idcategory){
+    Authenticator::verifyLogin();
     (new CategoryDAO())->delete($idcategory);
     header("Location: /admin/categories");
     exit;
 });
 
 $app->get("/admin/categories/:idcategory", function ($idcategory){
+    Authenticator::verifyLogin();
     $category = (new CategoryDAO())->getById($idcategory);
     if(isset($category)){
         (new PageBuilder()) ->withHeader()
@@ -212,10 +220,22 @@ $app->get("/admin/categories/:idcategory", function ($idcategory){
 });
 
 $app->post("/admin/categories/:idcategory", function ($idcategory){
+    Authenticator::verifyLogin();
     $_POST['idcategory'] = $idcategory;
     (new CategoryDAO())->save($_POST);
     header("Location: /admin/categories");
     exit;
+});
+
+$app->get('/categories/:idcategory', function ($idcategory){
+    $category = (new CategoryDAO()) ->getById($idcategory);
+    (new PageBuilder()) ->withHeader()
+                        ->withFooter()
+                        ->withTpl('category')
+                        ->withData(["category" => $category->getDirectValues(), "products" => []])
+                        ->build();
+
+
 });
 
 $app->run();

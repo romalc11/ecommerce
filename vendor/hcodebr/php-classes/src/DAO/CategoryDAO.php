@@ -11,6 +11,7 @@ namespace Hcode\DAO;
 
 use Hcode\Factory\CategoryFactory;
 use Hcode\Model\Category;
+use Hcode\Util\Files\CategoryFileUpdate;
 
 class CategoryDAO extends DAO
 {
@@ -26,6 +27,7 @@ class CategoryDAO extends DAO
 
         $results = $this->select("CALL sp_categories_save(:idcategory, :descategory)", $this->formatParameters($data));
         if(count($results) > 0){
+            $this->updateElements();
             return CategoryFactory::create($results[0]);
         }
 
@@ -35,6 +37,7 @@ class CategoryDAO extends DAO
     public function delete($idcategory)
     {
         $this->query("DELETE FROM tb_categories WHERE idcategory = :idcategory", [":idcategory" => $idcategory]);
+        $this->updateElements();
     }
 
     public function getById($idcategory) : ?Category
@@ -45,5 +48,9 @@ class CategoryDAO extends DAO
         }
 
         return NULL;
+    }
+
+    private function updateElements(){
+        (new CategoryFileUpdate())->updateBy($this->selectAll());
     }
 }
