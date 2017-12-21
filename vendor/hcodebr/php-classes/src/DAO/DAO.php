@@ -64,5 +64,12 @@ abstract class DAO
         return $data;
     }
 
+    public abstract function save($data);
+    public abstract function delete($id);
+    public abstract function getById($id);
+    public abstract function selectAll();
+
+
+
 
 }

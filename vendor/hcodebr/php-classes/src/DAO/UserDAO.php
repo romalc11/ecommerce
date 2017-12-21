@@ -62,7 +62,7 @@ class UserDAO extends DAO
     }
 
 
-    public function getById(int $iduser): ?User
+    public function getById($iduser): ?User
     {
         $query = "SELECT * FROM tb_users a INNER JOIN tb_persons b USING(idperson) WHERE a.iduser = :iduser ORDER BY desperson ";
         $results = $this->select($query, array(":iduser" => $iduser));
@@ -74,7 +74,6 @@ class UserDAO extends DAO
 
     public function getByEmail($desemail): ?User
     {
-        ;
         $query = "SELECT * FROM tb_users a INNER JOIN tb_persons b USING(idperson) WHERE b.desemail = :desemail ORDER BY desperson ";
         $results = $this->select($query, array(":desemail" => $desemail));
         if (count($results) > 0) {
@@ -120,7 +119,7 @@ class UserDAO extends DAO
         return null;
     }
 
-    public function joinSelect()
+    public function selectAll()
     {
         return $this->select("SELECT * FROM tb_users a INNER JOIN tb_persons b USING(idperson) ORDER BY desperson");
     }
