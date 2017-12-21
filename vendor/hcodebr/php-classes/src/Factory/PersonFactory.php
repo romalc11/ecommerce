@@ -12,9 +12,9 @@ use Hcode\Model\Person;
 
 class PersonFactory extends Factory
 {
-    public static function create($attributes = array(), $className = "Person") : Person
+    public static function create($attributes = array()) : Person
     {
-        $person = parent::create($attributes, $className);
+        $person = parent::create($attributes);
 
         return $person;
     }

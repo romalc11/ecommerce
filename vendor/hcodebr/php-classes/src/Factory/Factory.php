@@ -9,13 +9,15 @@
 namespace Hcode\Factory;
 
 use Hcode\Model\AllFields;
-use Hcode\Model\Model;
 
 abstract class Factory
 {
-    public static function create($attributes = array(), $className)
+
+    public static function create($attributes = array())
     {
-        $className = "\\Hcode\\Model\\" . $className;
+        $arrModelClass = explode('Factory', (new \ReflectionClass(get_called_class()))->getShortName());
+
+        $className = "\\Hcode\\Model\\" . $arrModelClass[0];
 
         $object = new $className;
 
@@ -35,5 +37,18 @@ abstract class Factory
                 $object->{"set" . ucfirst($key)}($attr);
             }
         }
+    }
+
+    public static function prepareList($list)
+    {
+        foreach ($list as &$values) {
+            $object = self::create($values);
+
+            if($object instanceof AllFields){
+                $values = $object->getDirectValues();
+            }
+        }
+
+        return $list;
     }
 }

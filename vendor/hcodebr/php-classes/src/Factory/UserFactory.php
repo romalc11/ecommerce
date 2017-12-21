@@ -13,9 +13,9 @@ use \Hcode\Model\User;
 
 class UserFactory extends Factory
 {
-    public static function create($attributes = array(), $className = "User"): User
+    public static function create($attributes = array()): User
     {
-        $user = parent::create($attributes, $className);
+        $user = parent::create($attributes);
 
         if ($user instanceof User) {
             $person = PersonFactory::create($attributes);

@@ -21,6 +21,7 @@ class Product implements AllFields
     private $desurl;
     private $desphoto;
     private $dtregister;
+
     use GetValues {
         getDirectValues as traitGeDirectValues;
     }

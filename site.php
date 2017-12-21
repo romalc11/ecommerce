@@ -8,11 +8,13 @@
 
 use Hcode\Builder\PageBuilder;
 use Hcode\DAO\CategoryDAO;
+use Hcode\DAO\ProductDAO;
 
 $app->get('/', function () {
     (new PageBuilder()) ->withTpl('index')
         ->withHeader()
         ->withFooter()
+        ->withData(["products" => (new ProductDAO())->selectAll()])
         ->build();
 });
 

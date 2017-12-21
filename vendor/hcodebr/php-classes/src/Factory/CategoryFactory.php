@@ -13,8 +13,8 @@ use Hcode\Model\Category;
 
 class CategoryFactory extends Factory
 {
-    public static function create($attributes = array(), $className = "Category") : Category
+    public static function create($attributes = array()) : Category
     {
-        return parent::create($attributes, $className);
+        return parent::create($attributes);
     }
 }
