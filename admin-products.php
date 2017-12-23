@@ -13,7 +13,6 @@ use Hcode\Util\Files\FileUploader;
 
 $app->group('/products', function () use ($app) {
     $app->get('', function () {
-        Authenticator::verifyLogin();
         $products = (new ProductDAO())->selectAll();
         (new PageBuilder())->withHeader()
                            ->withFooter()

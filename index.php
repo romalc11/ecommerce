@@ -6,11 +6,19 @@
  * Time: 03:45
  */
 
+
 session_start();
+use Slim\Flash\Messages;
 require_once("vendor/autoload.php");
 
 
 $app = new \Slim\App();
+$container = $app->getContainer();
+
+$container['flash'] = function () {
+    return new Messages();
+};
+
 
 require_once("functions.php");
 require_once("site.php");

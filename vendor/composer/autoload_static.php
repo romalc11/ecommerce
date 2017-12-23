@@ -13,6 +13,7 @@ class ComposerStaticInit1b2a85e83a68ef311901c63552488896
     public static $prefixLengthsPsr4 = array (
         'S' => 
         array (
+            'Slim\\Flash\\' => 11,
             'Slim\\' => 5,
         ),
         'P' => 
@@ -35,6 +36,10 @@ class ComposerStaticInit1b2a85e83a68ef311901c63552488896
     );
 
     public static $prefixDirsPsr4 = array (
+        'Slim\\Flash\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/slim/flash/src',
+        ),
         'Slim\\' => 
         array (
             0 => __DIR__ . '/..' . '/slim/slim/Slim',

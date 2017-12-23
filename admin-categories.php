@@ -10,10 +10,8 @@ use Hcode\Builder\PageBuilder;
 use Hcode\DAO\CategoryDAO;
 use Hcode\Model\Security\Authenticator;
 
-$app->group('categories', function () use ($app) {
+$app->group('/categories', function () use ($app) {
     $app->get('', function () {
-
-        Authenticator::verifyLogin();
         $categories = (new CategoryDAO())->selectAll();
 
         (new PageBuilder())->withHeader()
@@ -26,7 +24,6 @@ $app->group('categories', function () use ($app) {
     );
 
     $app->get('/create', function () {
-        Authenticator::verifyLogin();
         (new PageBuilder())->withHeader()
                            ->withFooter()
                            ->withTpl('categories-create')
@@ -35,7 +32,6 @@ $app->group('categories', function () use ($app) {
     );
 
     $app->post('/create', function () {
-        Authenticator::verifyLogin();
         (new CategoryDAO())->save(["descategory" => $_POST['descategory']]);
         header('Location:  /admin/categories');
         exit;
@@ -43,7 +39,6 @@ $app->group('categories', function () use ($app) {
     );
 
     $app->get("/:idcategory/delete", function ($idcategory) {
-        Authenticator::verifyLogin();
         (new CategoryDAO())->delete($idcategory);
         header("Location: /admin/categories");
         exit;
@@ -51,7 +46,6 @@ $app->group('categories', function () use ($app) {
     );
 
     $app->get("/:idcategory", function ($idcategory) {
-        Authenticator::verifyLogin();
         $category = (new CategoryDAO())->getById($idcategory);
         if (isset($category)) {
             (new PageBuilder())->withHeader()
@@ -66,7 +60,6 @@ $app->group('categories', function () use ($app) {
     );
 
     $app->post("/:idcategory", function ($idcategory) {
-        Authenticator::verifyLogin();
         $_POST['idcategory'] = $idcategory;
         (new CategoryDAO())->save($_POST);
         header("Location: /admin/categories");
@@ -75,7 +68,6 @@ $app->group('categories', function () use ($app) {
     );
 
     $app->get('/:idcategory/products', function ($idcategory) {
-        Authenticator::verifyLogin();
     }
     );
 }

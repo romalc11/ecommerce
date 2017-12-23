@@ -15,40 +15,35 @@ use Hcode\Model\User;
 
 class Authenticator
 {
-    const SESSION = "UserLogged";
+    const SESSION_CODE = "UserLogged";
 
     public static function login($login, $password)
     {
         $userDAO = new UserDAO();
-
         $user = $userDAO->getByLogin($login);
         if (isset($user) && password_verify($password, $user->getDespassword())) {
-            $_SESSION[Authenticator::SESSION] = serialize($user);
+            session_regenerate_id();
+            $_SESSION[Authenticator::SESSION_CODE] = serialize($user);
         } else {
             throw new \Exception("Usuário inexistente ou senha inválida");
         }
 
     }
 
-    public static function verifyLogin()
-    {
-        if (isset($_SESSION[Authenticator::SESSION])) {
-            $user = unserialize($_SESSION[Authenticator::SESSION]);
+    public static function reLogin($login, $hashPassword){
+        $userDAO = new UserDAO();
+        $user = $userDAO->getByLogin($login);
 
-            if (!isset($user) || !$user instanceof User || !(int)$user->getIduser() > 0 || (bool)$user->getInadmin() != 1) {
-                header("Location: /admin/login");
-                exit;
-            }
-        } else{
-            header("Location: /admin/login");
-            exit;
+        if (isset($user) && $hashPassword == $user->getDespassword()) {
+            $_SESSION[Authenticator::SESSION_CODE] = serialize($user);
+        } else {
+            throw new \Exception("Usuário inexistente ou senha inválida");
         }
-
 
     }
 
     public static function logout()
     {
-        $_SESSION[Authenticator::SESSION] = NULL;
+        $_SESSION[Authenticator::SESSION_CODE] = NULL;
     }
 }

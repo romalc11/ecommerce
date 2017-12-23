@@ -12,8 +12,6 @@ use Hcode\Model\Security\Authenticator;
 
 $app->group('/users', function () use ($app) {
     $app->get('', function () {
-        Authenticator::verifyLogin();
-
         $users = (new UserDAO())->selectAll();
 
         (new PageBuilder())->withData(['users' => $users])
@@ -25,8 +23,6 @@ $app->group('/users', function () use ($app) {
     );
 
     $app->get('/create', function () {
-        Authenticator::verifyLogin();
-
         (new PageBuilder())->withTpl('users-create')
                            ->withHeader()
                            ->withFooter()
@@ -36,7 +32,6 @@ $app->group('/users', function () use ($app) {
     );
 
     $app->get('/:iduser/delete', function ($iduser) {
-        Authenticator::verifyLogin();
         (new UserDAO())->delete($iduser);
 
         header("Location: /admin/users");
@@ -46,8 +41,6 @@ $app->group('/users', function () use ($app) {
     );
 
     $app->get('/:iduser', function ($iduser) {
-        Authenticator::verifyLogin();
-
         $user = (new UserDAO())->getById($iduser);
 
         (new PageBuilder())->withData(["user" => $user->getDiscriminatedValues()])
@@ -60,8 +53,6 @@ $app->group('/users', function () use ($app) {
     );
 
     $app->post('/create', function () {
-        Authenticator::verifyLogin();
-
         $_POST['despassword'] = password_hash($_POST['despassword'], PASSWORD_DEFAULT);
         $_POST["inadmin"] = (isset($_POST["inadmin"])) ? 1 : 0;
 

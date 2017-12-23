@@ -7,36 +7,61 @@
  */
 
 use Hcode\Builder\PageBuilder;
+use Hcode\Middleware\AuthMiddleware;
 use Hcode\Model\Security\Authenticator;
 use Hcode\Model\Security\PasswordHelper;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Hcode\Middleware\LoggedMiddleware;
 
 $app->group("/admin", function () use ($app) {
-    $app->get("", function () {
-        Authenticator::verifyLogin();
+    $app->group('', function () use ($app) {
 
-        (new PageBuilder())->withHeader()
-                           ->withFooter()
-                           ->withTpl('index')
-                           ->build(true);
+        $app->get('', function () {
+
+            (new PageBuilder())->withHeader()
+                               ->withFooter()
+                               ->withTpl('index')
+                               ->build(true);
+        }
+        );
+
+        require_once("admin-users.php");
+        require_once("admin-categories.php");
+        require_once("admin-products.php");
     }
-    );
+
+    )
+        ->add(new AuthMiddleware());
 
     $app->get("/login", function () {
-        (new PageBuilder())->withTpl("login")
-                           ->build(true);
+        $pageBuilder = new PageBuilder();
+        $pageBuilder->withTpl("login")
+                    ->withData(['error' => $this->flash->getFirstMessage('error')])
+                    ->build(true);
+    }
+    )
+        ->add(new LoggedMiddleware());
+
+    $app->post('/login', function () {
+        try {
+            Authenticator::login($_POST['login'], $_POST['password']);
+            header("Location: /admin");
+            exit;
+        } catch (Exception $e) {
+            $this->flash->addMessage('error', $e->getMessage());
+            header('Location: /admin/login');
+            exit;
+        }
+
+
     }
     );
-
-    $app->post('login', function(){
-        Authenticator::login($_POST['login'], $_POST['password']);
-        header("Location: /admin");
-        exit;
-    });
 
     $app->get('/logout', function () {
         Authenticator::logout();
         header("Location: /admin/login");
-        exit();
+        exit;
     }
     );
 
@@ -87,10 +112,6 @@ $app->group("/admin", function () use ($app) {
         }
     }
     );
-
-    require_once("admin-users.php");
-    require_once("admin-categories.php");
-    require_once("admin-products.php");
 }
 );
 
