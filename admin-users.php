@@ -8,7 +8,7 @@
 
 use Hcode\Builder\PageBuilder;
 use Hcode\DAO\UserDAO;
-use Hcode\Model\Security\Authenticator;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
 $app->group('/users', function () use ($app) {
     $app->get('', function () {
@@ -31,8 +31,8 @@ $app->group('/users', function () use ($app) {
     }
     );
 
-    $app->get('/:iduser/delete', function ($iduser) {
-        (new UserDAO())->delete($iduser);
+    $app->get('/{iduser}/delete', function (Request $request) {
+        (new UserDAO())->delete($request->getAttribute('iduser'));
 
         header("Location: /admin/users");
         exit;
@@ -40,8 +40,9 @@ $app->group('/users', function () use ($app) {
     }
     );
 
-    $app->get('/:iduser', function ($iduser) {
-        $user = (new UserDAO())->getById($iduser);
+
+    $app->get('/{iduser}', function (Request $request) {
+        $user = (new UserDAO())->getById($request->getAttribute('iduser'));
 
         (new PageBuilder())->withData(["user" => $user->getDiscriminatedValues()])
                            ->withHeader()
@@ -64,10 +65,10 @@ $app->group('/users', function () use ($app) {
     }
     );
 
-    $app->post('/:iduser', function ($iduser) {
-        Authenticator::verifyLogin();
+    $app->post('/{iduser}', function (Request $request) {
 
         $userDAO = new UserDAO();
+        $iduser = $request->getAttribute('iduser');
         $user = $userDAO->getById($iduser);
 
         $_POST['iduser'] = $iduser;

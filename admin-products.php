@@ -8,7 +8,7 @@
 
 use Hcode\Builder\PageBuilder;
 use Hcode\DAO\ProductDAO;
-use Hcode\Model\Security\Authenticator;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Hcode\Util\Files\FileUploader;
 
 $app->group('/products', function () use ($app) {
@@ -38,8 +38,8 @@ $app->group('/products', function () use ($app) {
     }
     );
 
-    $app->get('/:idproduct', function ($idproduct) {
-        $product = (new ProductDAO())->getById($idproduct);
+    $app->get('/{idproduct}', function (Request $request) {
+        $product = (new ProductDAO())->getById($request->getAttribute('idproduct'));
         (new PageBuilder())->withHeader()
                            ->withFooter()
                            ->withTpl('products-update')
@@ -48,8 +48,9 @@ $app->group('/products', function () use ($app) {
     }
     );
 
-    $app->post('/:idproduct', function ($idproduct) {
+    $app->post('/{idproduct}', function (Request $request) {
         $productDAO = new ProductDAO();
+        $idproduct = $request->getAttribute('idproduct');
         $product = $productDAO->getById($idproduct);
 
         $_POST['idproduct'] = $idproduct;
@@ -57,15 +58,15 @@ $app->group('/products', function () use ($app) {
 
         $productDAO->save($_POST);
 
-        FileUploader::imageProduct($_FILES['file'], $idproduct);
+        FileUploader::imageProduct($_FILES['file'], $args['idproduct']);
         header("Location: /admin/products");
         exit;
     }
     );
 
 
-    $app->get('/:idproduct/delete', function ($idprodct) {
-        (new ProductDAO())->delete($idprodct);
+    $app->get('/{idproduct}/delete', function (Request $request) {
+        (new ProductDAO())->delete($request->getAttribute('idproduct'));
         header("Location: /admin/products");
         exit;
     }

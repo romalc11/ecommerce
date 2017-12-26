@@ -8,7 +8,7 @@
 
 use Hcode\Builder\PageBuilder;
 use Hcode\DAO\CategoryDAO;
-use Hcode\Model\Security\Authenticator;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
 $app->group('/categories', function () use ($app) {
     $app->get('', function () {
@@ -38,15 +38,15 @@ $app->group('/categories', function () use ($app) {
     }
     );
 
-    $app->get("/:idcategory/delete", function ($idcategory) {
-        (new CategoryDAO())->delete($idcategory);
+    $app->get("/{idcategory}/delete", function (Request $request) {
+        (new CategoryDAO())->delete($request->getAttribute('idcategory'));
         header("Location: /admin/categories");
         exit;
     }
     );
 
-    $app->get("/:idcategory", function ($idcategory) {
-        $category = (new CategoryDAO())->getById($idcategory);
+    $app->get("/{idcategory}", function (Request $request) {
+        $category = (new CategoryDAO())->getById($request->getAttribute('idcategory'));
         if (isset($category)) {
             (new PageBuilder())->withHeader()
                                ->withFooter()
@@ -59,16 +59,45 @@ $app->group('/categories', function () use ($app) {
     }
     );
 
-    $app->post("/:idcategory", function ($idcategory) {
-        $_POST['idcategory'] = $idcategory;
+    $app->post("/{idcategory}", function (Request $request) {
+        $_POST['idcategory'] = $request->getAttribute('idcategory');
         (new CategoryDAO())->save($_POST);
         header("Location: /admin/categories");
         exit;
     }
     );
 
-    $app->get('/:idcategory/products', function ($idcategory) {
-    }
-    );
+    $app->group("/{idcategory}/products", function () use ($app){
+
+        $app->get("", function (Request $request) {
+            $idcategory = $request->getAttribute('idcategory');
+            $categoryDAO = new CategoryDAO();
+            $category = $categoryDAO->getById($idcategory);
+
+            (new PageBuilder())->withHeader()
+                               ->withFooter()
+                               ->withTpl('categories-products')
+                               ->withData(['category' => $category->getDirectValues(), 'productsRelated' => $categoryDAO->getProducts($idcategory), 'productsNotRelated' => $categoryDAO->getProducts($idcategory, false)])
+                               ->build(true);
+        }
+        );
+
+        $app->post('/{idproduct}/add', function (Request $request){
+            $idproduct = $request->getAttribute('idproduct');
+            $idcategory = $request->getAttribute('idcategory');
+            (new CategoryDAO())->addProduct($idcategory, $idproduct);
+            header("Location: /admin/categories/".$idcategory."/products");
+            exit;
+        });
+
+        $app->post('/{idproduct}/remove', function (Request $request){
+            $idproduct = $request->getAttribute('idproduct');
+            $idcategory = $request->getAttribute('idcategory');
+            (new CategoryDAO())->removeProduct($idcategory, $idproduct);
+            header("Location: /admin/categories/".$idcategory."/products");
+            exit;
+        });
+
+    });
 }
 );

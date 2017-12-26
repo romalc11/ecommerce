@@ -10,8 +10,6 @@ use Hcode\Builder\PageBuilder;
 use Hcode\Middleware\AuthMiddleware;
 use Hcode\Model\Security\Authenticator;
 use Hcode\Model\Security\PasswordHelper;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use Hcode\Middleware\LoggedMiddleware;
 
 $app->group("/admin", function () use ($app) {

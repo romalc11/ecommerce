@@ -9,6 +9,8 @@
 use Hcode\Builder\PageBuilder;
 use Hcode\DAO\CategoryDAO;
 use Hcode\DAO\ProductDAO;
+use Psr\Http\Message\ServerRequestInterface as Request;
+
 
 $app->get('/', function () {
     (new PageBuilder()) ->withTpl('index')
@@ -18,12 +20,14 @@ $app->get('/', function () {
         ->build();
 });
 
-$app->get('/categories/:idcategory', function ($idcategory){
-    $category = (new CategoryDAO()) ->getById($idcategory);
+$app->get('/categories/{idcategory}', function (Request $request){
+    $categoryDAO = new CategoryDAO();
+    $idcategory = $request->getAttribute('idcategory');
+    $category = $categoryDAO->getById($idcategory);
     (new PageBuilder()) ->withHeader()
         ->withFooter()
         ->withTpl('category')
-        ->withData(["category" => $category->getDirectValues(), "products" => []])
+        ->withData(["category" => $category->getDirectValues(), "products" => $categoryDAO->getProducts($idcategory)])
         ->build();
 
 
