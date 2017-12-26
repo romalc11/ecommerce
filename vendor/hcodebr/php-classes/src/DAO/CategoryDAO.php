@@ -53,7 +53,18 @@ class CategoryDAO extends DAO
         return NULL;
     }
 
-    public function getProducts($idcategory, $related = true) :array
+    public function limitProductsSelect($idcategory, $start, $limit)
+    {
+        $result = $this->select("SELECT SQL_CALC_FOUND_ROWS * FROM tb_products a INNER JOIN tb_productscategories b ON a.idproduct = b.idproduct INNER JOIN tb_categories c ON c.idcategory = b.idcategory WHERE c.idcategory = :idcategory LIMIT $start, $limit", [':idcategory' => $idcategory]);
+        $totalResult = $this->select("SELECT FOUND_ROWS() AS nrtotal");
+
+        return [
+            'data' => ProductFactory::prepareList($result),
+            'total' => $totalResult[0]["nrtotal"]
+        ];
+    }
+
+    public function getProducts($idcategory, $related = true): array
     {
         if ($related) {
             $sql = "SELECT * FROM tb_products WHERE idproduct IN(SELECT a.idproduct FROM tb_products a INNER JOIN tb_productscategories b ON a.idproduct = b.idproduct WHERE b.idcategory = :idcategory)";
@@ -62,7 +73,7 @@ class CategoryDAO extends DAO
             $sql = "SELECT * FROM tb_products WHERE idproduct NOT IN(SELECT a.idproduct FROM tb_products a INNER JOIN tb_productscategories b ON a.idproduct = b.idproduct WHERE b.idcategory = :idcategory)";
         }
 
-        return  ProductFactory::prepareList($this->select($sql, [":idcategory" => $idcategory]));
+        return ProductFactory::prepareList($this->select($sql, [":idcategory" => $idcategory]));
     }
 
     private function updateElements()
@@ -72,11 +83,11 @@ class CategoryDAO extends DAO
 
     public function addProduct($idcategory, $idproduct)
     {
-        $this->query("INSERT INTO tb_productscategories (idcategory, idproduct) VALUES (:idcategory, :idproduct)", ['idcategory'=> $idcategory, 'idproduct'=> $idproduct]);
+        $this->query("INSERT INTO tb_productscategories (idcategory, idproduct) VALUES (:idcategory, :idproduct)", ['idcategory' => $idcategory, 'idproduct' => $idproduct]);
     }
 
     public function removeProduct($idcategory, $idproduct)
     {
-        $this->query("DELETE FROM tb_productscategories WHERE idcategory = :idcategory AND idproduct = :idproduct", ['idcategory'=> $idcategory, 'idproduct'=> $idproduct]);
+        $this->query("DELETE FROM tb_productscategories WHERE idcategory = :idcategory AND idproduct = :idproduct", ['idcategory' => $idcategory, 'idproduct' => $idproduct]);
     }
 }
