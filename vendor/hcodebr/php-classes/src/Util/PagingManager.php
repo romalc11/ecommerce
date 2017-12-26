@@ -13,9 +13,8 @@ use Hcode\DAO\CategoryDAO;
 
 class PagingManager
 {
-    public static function pageCategoryProducts($page, $idcategory, $itensPerPage = 3)
+    public static function pageCategoryProducts($numberPage, $idcategory, $itensPerPage = 3)
     {
-        $numberPage = (isset($page)) ? $page : 1;
         $start = ($numberPage - 1) * $itensPerPage;
         $limitResult = (new CategoryDAO())->limitProductsSelect($idcategory, $start, $itensPerPage);
         $numberOfPages = ceil($limitResult['total'] / $itensPerPage);

@@ -24,10 +24,8 @@ $app->get('/', function () {
 
 $app->get('/categories/{idcategory}', function (Request $request) {
     $idcategory = $request->getAttribute('idcategory');
-
     $categoryDAO = new CategoryDAO();
-    $page = PagingManager::pageCategoryProducts($request->getQueryParams()['page'], $idcategory);
-
+    $page = PagingManager::pageCategoryProducts((isset($request->getQueryParams()['page'])) ? $request->getQueryParams()['page'] : 1, $idcategory);
     $category = $categoryDAO->getById($idcategory);
     (new PageBuilder())->withHeader()
                        ->withFooter()
@@ -37,9 +35,28 @@ $app->get('/categories/{idcategory}', function (Request $request) {
                                "products" => $page['products'],
                                "pages" => $page['data']
                            ]
-                      )
+                       )
                        ->build();
 
 
+}
+);
+
+$app->get('/products/{desurl}', function (Request $request) {
+    $productDAO = new ProductDAO();
+    $product = $productDAO->getByUrl($request->getAttribute('desurl'));
+    $categories = $productDAO->getCategories($product->getIdproduct());
+//    var_dump($categories);
+//    exit;
+    (new PageBuilder())->withFooter()
+                       ->withHeader()
+                       ->withTpl('product-detail')
+                       ->withData(
+                           [
+                               'product' => $product->getDirectValues(),
+                               'categories' => $categories
+                           ]
+                       )
+                       ->build();
 }
 );

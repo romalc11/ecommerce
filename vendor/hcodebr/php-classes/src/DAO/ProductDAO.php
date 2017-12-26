@@ -41,4 +41,19 @@ class ProductDAO extends DAO
     {
        return ProductFactory::prepareList($this->select("SELECT * FROM tb_products"));
     }
+
+    public function getByUrl($desurl)
+    {
+        $results = $this->select("SELECT * FROM tb_products WHERE desurl = :desurl", [':desurl' => $desurl]);
+
+        if(count($results) > 0){
+            return ProductFactory::create($results[0]);
+        }
+        return NULL;
+    }
+
+    public function getCategories($idProduct)
+    {
+        return $this->select("SELECT * FROM tb_categories a INNER JOIN tb_productscategories b ON a.idcategory = b.idcategory WHERE b.idproduct = :idproduct", [':idproduct'=> $idProduct]);
+    }
 }
