@@ -11,6 +11,7 @@ use Hcode\Middleware\AuthMiddleware;
 use Hcode\Model\Security\Authenticator;
 use Hcode\Model\Security\PasswordHelper;
 use Hcode\Middleware\LoggedMiddleware;
+use Psr\Http\Message\ServerRequestInterface;
 
 $app->group("/admin", function () use ($app) {
     $app->group('', function () use ($app) {
@@ -30,9 +31,15 @@ $app->group("/admin", function () use ($app) {
     }
 
     )
-        ->add(new AuthMiddleware());
+        ->add(new AuthMiddleware(true));
 
-    $app->get("/login", function () {
+    $app->get("/login", function (ServerRequestInterface $request) {
+        $error = $request->getAttribute('error');
+
+        if (isset($error)) {
+            $this->flash->addMessage('error', $error);
+        }
+
         $pageBuilder = new PageBuilder();
         $pageBuilder->withTpl("login")
                     ->withData(['error' => $this->flash->getFirstMessage('error')])

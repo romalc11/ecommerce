@@ -11,22 +11,34 @@ namespace Hcode\Middleware;
 
 use Hcode\Model\Security\Authenticator;
 use Hcode\Model\User;
+use Hcode\Util\UserChecker;
 use Psr\Http\Message\ResponseInterface;
+use Slim\Http\Request;
 
 class AuthMiddleware
 {
-    public function __invoke($request, ResponseInterface $response, $next)
-    {
-        $user = unserialize($_SESSION[Authenticator::SESSION_CODE]);
+    private $isAdmin;
 
-        if (isset($_SESSION[Authenticator::SESSION_CODE])) {
-            if (!isset($user) || !$user instanceof User || !(int)$user->getIduser() > 0 || (bool)$user->getInadmin() != 1) {
-                return $response->withHeader('Location', '/admin/login');
+    public function __construct($isAdmin)
+    {
+        $this->isAdmin = $isAdmin;
+    }
+
+    public function __invoke(Request $request, ResponseInterface $response, $next)
+    {
+        if(UserChecker::isOnline()){
+            $user = unserialize($_SESSION[Authenticator::SESSION_CODE]);
+            if($user instanceof User){
+                if(($user->getInadmin() != 1 && $this->isAdmin)){
+                    $request->withAttribute('error', 'Você não tem autorização!');
+                    return $response->withHeader('Location', '/admin/login');
+                }
             }
         } else {
-            return $response->withHeader('Location', '/admin/login');
+            if($this->isAdmin){
+                return $response->withHeader('Location', '/admin/login');
+            }
         }
-
         return $next($request, $response);
     }
 }

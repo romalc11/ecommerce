@@ -8,6 +8,7 @@
 
 namespace Hcode\Factory;
 
+use Hcode\Model\Security\Authenticator;
 use \Hcode\Model\User;
 
 
@@ -24,6 +25,10 @@ class UserFactory extends Factory
         }
 
         return $user;
+    }
+
+    public static function createBySession() : User {
+        return $user = unserialize($_SESSION[Authenticator::SESSION_CODE]);
     }
 }
 

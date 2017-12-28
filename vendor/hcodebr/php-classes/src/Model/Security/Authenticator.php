@@ -22,8 +22,11 @@ class Authenticator
         $userDAO = new UserDAO();
         $user = $userDAO->getByLogin($login);
         if (isset($user) && password_verify($password, $user->getDespassword())) {
-            session_regenerate_id();
-            $_SESSION[Authenticator::SESSION_CODE] = serialize($user);
+            if($user->getInadmin() != 1){
+                throw new \Exception("Você não tem autorização!");
+            } else {
+                $_SESSION[Authenticator::SESSION_CODE] = serialize($user);
+            }
         } else {
             throw new \Exception("Usuário inexistente ou senha inválida");
         }
@@ -34,8 +37,12 @@ class Authenticator
         $userDAO = new UserDAO();
         $user = $userDAO->getByLogin($login);
 
-        if (isset($user) && $hashPassword == $user->getDespassword()) {
-            $_SESSION[Authenticator::SESSION_CODE] = serialize($user);
+        if (isset($user) && $hashPassword == $user->getDespassword() && $user->getInadmin() == 1) {
+            if($user->getInadmin() != 1){
+                throw new \Exception("Você não tem autorização!");
+            } else {
+                $_SESSION[Authenticator::SESSION_CODE] = serialize($user);
+            }
         } else {
             throw new \Exception("Usuário inexistente ou senha inválida");
         }
