@@ -28,7 +28,7 @@ class UserFactory extends Factory
     }
 
     public static function createBySession() : User {
-        return $user = unserialize($_SESSION[Authenticator::SESSION_CODE]);
+        return unserialize($_SESSION[Authenticator::SESSION_CODE]);
     }
 }
 

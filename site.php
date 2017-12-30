@@ -7,8 +7,10 @@
  */
 
 use Hcode\Builder\PageBuilder;
+use Hcode\DAO\CartDAO;
 use Hcode\DAO\CategoryDAO;
 use Hcode\DAO\ProductDAO;
+use Hcode\Factory\CartFactory;
 use Hcode\Middleware\CartMiddleware;
 use Hcode\Util\PagingManager;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -60,12 +62,57 @@ $app->group('/', function () use ($app) {
     }
     );
 
-    $app->get('cart', function () {
-        (new PageBuilder())->withHeader()
-                           ->withFooter()
-                           ->withTpl('cart')
-                           ->build();
-    }
-    );
+    $app->group('cart', function () use ($app){
+        $app->get('', function () {
+            $cart = CartFactory::createBySession();
+            (new PageBuilder())->withHeader()
+                               ->withFooter()
+                               ->withTpl('cart')
+                               ->withData(
+                                   [
+                                       'cart' => $cart->getDirectValues(),
+                                       'products' => (new CartDAO())->getProducts($cart->getIdcart())
+                                   ]
+                               )
+                               ->build();
+        }
+        );
+
+        $app->get("/{idproduct}/add", function (Request $request) {
+            $idproduct = $request->getAttribute('idproduct');
+            $cart = CartFactory::createBySession();
+            $qtd = (isset($request->getQueryParams()['qtd'])) ? (int) $request->getQueryParams()['qtd'] : 1;
+
+            for($i = 0; $i < $qtd; $i++){
+                (new CartDAO())->addProduct($cart->getIdcart(), $idproduct);
+            }
+
+            header('Location: /cart');
+            exit;
+        }
+        );
+
+        $app->get('/{idproduct}/minus', function (Request $request) {
+            $idproduct = $request->getAttribute('idproduct');
+            $cart = CartFactory::createBySession();
+
+            (new CartDAO())->removeProduct($cart->getIdcart(), $idproduct, false);
+            header('Location: /cart');
+            exit;
+        }
+        );
+
+        $app->get('/{idproduct}/remove', function (Request $request) {
+            $idproduct = $request->getAttribute('idproduct');
+            $cart = CartFactory::createBySession();
+
+            (new CartDAO())->removeProduct($cart->getIdcart(), $idproduct);
+            header('Location: /cart');
+            exit;
+        }
+        );
+    });
+
 }
-)->add(new CartMiddleware());
+)
+    ->add(new CartMiddleware());

@@ -10,6 +10,7 @@ namespace Hcode\Factory;
 
 
 use Hcode\DAO\UserDAO;
+use Hcode\Middleware\CartMiddleware;
 use Hcode\Model\Cart;
 
 class CartFactory extends Factory
@@ -25,5 +26,9 @@ class CartFactory extends Factory
         }
 
         return $cart;
+    }
+
+    public static function createBySession(): Cart{
+        return unserialize($_SESSION[CartMiddleware::SESSIONCODE]);
     }
 }
