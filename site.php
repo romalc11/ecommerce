@@ -12,6 +12,7 @@ use Hcode\DAO\CategoryDAO;
 use Hcode\DAO\ProductDAO;
 use Hcode\Factory\CartFactory;
 use Hcode\Middleware\CartMiddleware;
+use Hcode\Util\FreightCalculator;
 use Hcode\Util\PagingManager;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -62,7 +63,7 @@ $app->group('/', function () use ($app) {
     }
     );
 
-    $app->group('cart', function () use ($app){
+    $app->group('cart', function () use ($app) {
         $app->get('', function () {
             $cart = CartFactory::createBySession();
             (new PageBuilder())->withHeader()
@@ -71,7 +72,9 @@ $app->group('/', function () use ($app) {
                                ->withData(
                                    [
                                        'cart' => $cart->getDirectValues(),
-                                       'products' => (new CartDAO())->getProducts($cart->getIdcart())
+                                       'cartProductsInfo' => (new CartDAO())->getCartProductsInfo($cart->getIdcart()),
+                                       'products' => (new CartDAO())->getProducts($cart->getIdcart()),
+                                       'error' => $this->flash->getFirstMessage('error')
                                    ]
                                )
                                ->build();
@@ -81,10 +84,16 @@ $app->group('/', function () use ($app) {
         $app->get("/{idproduct}/add", function (Request $request) {
             $idproduct = $request->getAttribute('idproduct');
             $cart = CartFactory::createBySession();
-            $qtd = (isset($request->getQueryParams()['qtd'])) ? (int) $request->getQueryParams()['qtd'] : 1;
+            $qtd = (isset($request->getQueryParams()['qtd'])) ? (int)$request->getQueryParams()['qtd'] : 1;
 
-            for($i = 0; $i < $qtd; $i++){
+            for ($i = 0; $i < $qtd; $i++) {
                 (new CartDAO())->addProduct($cart->getIdcart(), $idproduct);
+            }
+
+            $deszipcode = $cart->getDeszipcode();
+
+            if(isset($deszipcode) || $deszipcode != ''){
+               FreightCalculator::calculateFor($deszipcode);
             }
 
             header('Location: /cart');
@@ -97,6 +106,13 @@ $app->group('/', function () use ($app) {
             $cart = CartFactory::createBySession();
 
             (new CartDAO())->removeProduct($cart->getIdcart(), $idproduct, false);
+
+            $deszipcode = $cart->getDeszipcode();
+
+            if(isset($deszipcode) || $deszipcode != ''){
+                FreightCalculator::calculateFor($deszipcode);
+            }
+
             header('Location: /cart');
             exit;
         }
@@ -111,7 +127,25 @@ $app->group('/', function () use ($app) {
             exit;
         }
         );
-    });
+
+        $app->post('/freight', function (Request $request) {
+            $nrzipcode = $request->getParsedBody()['zipcode'];
+            if(isset($nrzipcode)){
+                try{
+                    FreightCalculator::calculateFor($nrzipcode);
+                } catch (Exception $e){
+                    $this->flash->addMessage('error', $e->getMessage());
+                } finally {
+                    header('Location: /cart');
+                    exit;
+                }
+
+
+            }
+        }
+        );
+    }
+    );
 
 }
 )

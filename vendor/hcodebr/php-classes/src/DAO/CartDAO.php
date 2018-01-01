@@ -18,13 +18,16 @@ class CartDAO extends DAO
 
     public function save($data = array()): ?Cart
     {
+        if(isset($data['dtregister'])){
+            unset($data['dtregister']);
+        }
+
         $default = ["idcart" => null, "dessessionid" => null, "iduser" => null, "deszipcode" => null, "vlfreight" => null, "nrdays" => null];
 
         $data = array_merge($default, $data);
 
-        $results = $this->select('CALL sp_carts_save(:idcart, :dessessionid, :iduser, :deszipcode, :vlfreight, :nrdays)', $this->formatParameters($data));
+        $results = $this->select("CALL sp_carts_save(:idcart, :dessessionid, :iduser, :deszipcode, :vlfreight, :nrdays)", $this->formatParameters($data));
         if (count($results) > 0) {
-
             return CartFactory::create($results[0]);
         }
         return NULL;
@@ -76,6 +79,26 @@ class CartDAO extends DAO
 
         if (count($results) > 0) {
             return ProductFactory::prepareListForCart($results);
+        }
+        return array();
+    }
+
+    public function getCartProductsInfo($idcart)
+    {
+        $results = $this->select("
+                                SELECT SUM(vlprice) AS vlprice, SUM(vlwidth) AS vlwidth, SUM(vlheight) AS vlheight, SUM(vllength) AS vllength, SUM(vlweight) AS vlweight, COUNT(*) AS nrqtd
+                                FROM tb_products a 
+                                INNER JOIN tb_cartsproducts b 
+                                ON a.idproduct = b.idproduct 
+                                WHERE b.idcart = :idcart AND b.dtremoved IS NULL",
+
+            [
+                ':idcart' => $idcart
+            ]
+        );
+
+        if (count($results) > 0) {
+            return $results[0];
         }
         return array();
     }

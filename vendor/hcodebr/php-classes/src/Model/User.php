@@ -19,7 +19,9 @@ class User implements AllFields
     private $inadmin;
     private $dtregister;
 
-    use GetValues;
+    use GetValues {
+        getValuesColumnTable as traitGetValuesColumnTable;
+    }
 
 
     public function __construct()
@@ -124,4 +126,8 @@ class User implements AllFields
         $this->dtregister = $dtregister;
     }
 
+    public function getValuesColumnTable()
+    {
+        return $this->traitGetValuesColumnTable(['person']);
+    }
 }

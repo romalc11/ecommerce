@@ -23,7 +23,7 @@ class Product implements AllFields
     private $dtregister;
 
     use GetValues {
-        getDirectValues as traitGeDirectValues;
+        getDirectValues as traitGetDirectValues;
     }
 
     /**
@@ -207,7 +207,7 @@ class Product implements AllFields
     public function getDirectValues()
     {
         $this->checkPhoto();
-        return $this->traitGeDirectValues();
+        return $this->traitGetDirectValues();
     }
 
 

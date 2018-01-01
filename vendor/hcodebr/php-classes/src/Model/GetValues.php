@@ -35,4 +35,22 @@ trait GetValues
         return $values;
 
     }
+
+    public function getValuesColumnTable($foreignKeys = array()){
+        $values = $this->getDirectValues();
+        foreach ($values as $key => $value) {
+            if ((in_array($key, $foreignKeys) && $value instanceof AllFields)) {
+                $values['id'.$key] = $value->getDirectValues()['id'.$key];
+                unset($values[$key]);
+            } else if (in_array($key, $foreignKeys) && is_null($value)){
+                $values['id'.$key] = null;
+                unset($values[$key]);
+            }
+        }
+
+        return $values;
+
+
+    }
+
 }

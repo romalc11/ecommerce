@@ -29,10 +29,10 @@ class CartMiddleware
 
             if($sessionObject instanceof Cart){
                 if($sessionObject->getIdcart() > 0){
-                    $cart = $sessionObject;
+                    $cart = $cartDAO->getById($sessionObject->getIdcart());
                 }
             }
-        } else{
+        } else {
             $cart = $cartDAO->getBySessionId();
         }
 
@@ -47,9 +47,9 @@ class CartMiddleware
             }
 
             $cart = $cartDAO->save($data);
-            $_SESSION[self::SESSIONCODE] = serialize($cart);
-
         }
+
+        $_SESSION[self::SESSIONCODE] = serialize($cart);
 
         return $next($request, $response);
     }

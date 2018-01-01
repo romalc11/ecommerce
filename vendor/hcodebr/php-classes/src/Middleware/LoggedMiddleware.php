@@ -19,16 +19,19 @@ class LoggedMiddleware
 {
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, $next)
     {
-        $user = unserialize($_SESSION[Authenticator::SESSION_CODE]);
+        if(isset($_SESSION[Authenticator::SESSION_CODE])){
+            $user = unserialize($_SESSION[Authenticator::SESSION_CODE]);
 
-        if (isset($user) && $user instanceof User) {
-            try {
-                Authenticator::reLogin($user->getDeslogin(), $user->getDespassword());
-                return $response->withHeader('Location', '/admin');
-            } catch (Exception $e) {
-                $request->withAttribute('error', $e->getMessage());
+            if ($user instanceof User) {
+                try {
+                    Authenticator::reLogin($user->getDeslogin(), $user->getDespassword());
+                    return $response->withHeader('Location', '/admin');
+                } catch (Exception $e) {
+                    $request->withAttribute('error', $e->getMessage());
+                }
             }
         }
+
 
         return $next($request, $response);
     }

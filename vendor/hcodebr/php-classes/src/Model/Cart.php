@@ -18,7 +18,10 @@ class Cart implements AllFields
     private $vlfreight;
     private $nrdays;
     private $dtregister;
-    use GetValues;
+    use GetValues {
+        getDirectValues as traitGetDirectValues;
+        getValuesColumnTable as traitGetValuesColumnTable;
+    }
 
     /**
      * @return mixed
@@ -133,5 +136,9 @@ class Cart implements AllFields
         $this->dtregister = $dtregister;
     }
 
+    public function getValuesColumnTable()
+    {
+        return $this->traitGetValuesColumnTable(['user']);
+    }
 
 }

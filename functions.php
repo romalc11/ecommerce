@@ -9,3 +9,8 @@
 function formatPrice(float $vlprice){
     return number_format($vlprice, "2", ",", ".");
 }
+
+function formatStringValueToDecimal($value){
+    $value = str_replace('.', '', $value);
+    return str_replace(',', '.', $value);
+}

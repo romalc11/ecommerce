@@ -14,4 +14,6 @@ interface AllFields
     public function getDirectValues();
 
     public function getDiscriminatedValues();
+
+    public function getValuesColumnTable();
 }
