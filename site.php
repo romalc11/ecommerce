@@ -11,7 +11,11 @@ use Hcode\DAO\CartDAO;
 use Hcode\DAO\CategoryDAO;
 use Hcode\DAO\ProductDAO;
 use Hcode\Factory\CartFactory;
+use Hcode\Middleware\AuthMiddleware;
 use Hcode\Middleware\CartMiddleware;
+use Hcode\Middleware\LoggedMiddleware;
+use Hcode\Model\Address;
+use Hcode\Model\Security\Authenticator;
 use Hcode\Util\FreightCalculator;
 use Hcode\Util\PagingManager;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -63,6 +67,58 @@ $app->group('/', function () use ($app) {
     }
     );
 
+    $app->get('login', function () {
+        (new PageBuilder())->withHeader()
+                           ->withFooter()
+                           ->withData(
+                               [
+                                   'error' => $this->flash->getFirstMessage('error')
+                               ]
+                           )
+                           ->withTpl('login')
+                           ->build();
+    }
+    )
+        ->add(new LoggedMiddleware(false));
+
+    $app->post('login', function (Request $request) {
+        $distUrl = 'Location: ';
+
+        try {
+            Authenticator::login($request->getParsedBody()['login'], $request->getParsedBody()['password']);
+            $distUrl .= '/checkout';
+        } catch (Exception $e) {
+            $this->flash->addMessage('error', $e->getMessage());
+            $distUrl .= '/login';
+        } finally {
+            header($distUrl);
+            exit;
+        }
+    }
+    );
+
+    $app->get('logout', function () {
+        Authenticator::logout();
+        header('Location: /login');
+        exit;
+    }
+    );
+
+    $app->get('checkout', function () {
+        (new PageBuilder())->withHeader()
+                           ->withFooter()
+                           ->withData(
+                               [
+                                   'cart' => CartFactory::createBySession()->getDirectValues(),
+                                   'address' => (new Address())->getDirectValues()
+                               ]
+                           )
+                           ->withTpl('checkout')
+                           ->build();
+    }
+    )
+        ->add(new AuthMiddleware(false));
+
     $app->group('cart', function () use ($app) {
         $app->get('', function () {
             $cart = CartFactory::createBySession();
@@ -92,8 +148,8 @@ $app->group('/', function () use ($app) {
 
             $deszipcode = $cart->getDeszipcode();
 
-            if(isset($deszipcode) || $deszipcode != ''){
-               FreightCalculator::calculateFor($deszipcode);
+            if (isset($deszipcode) || $deszipcode != '') {
+                FreightCalculator::calculateFor($deszipcode);
             }
 
             header('Location: /cart');
@@ -109,7 +165,7 @@ $app->group('/', function () use ($app) {
 
             $deszipcode = $cart->getDeszipcode();
 
-            if(isset($deszipcode) || $deszipcode != ''){
+            if (isset($deszipcode) || $deszipcode != '') {
                 FreightCalculator::calculateFor($deszipcode);
             }
 
@@ -130,10 +186,10 @@ $app->group('/', function () use ($app) {
 
         $app->post('/freight', function (Request $request) {
             $nrzipcode = $request->getParsedBody()['zipcode'];
-            if(isset($nrzipcode)){
-                try{
+            if (isset($nrzipcode)) {
+                try {
                     FreightCalculator::calculateFor($nrzipcode);
-                } catch (Exception $e){
+                } catch (Exception $e) {
                     $this->flash->addMessage('error', $e->getMessage());
                 } finally {
                     header('Location: /cart');

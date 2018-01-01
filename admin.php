@@ -46,16 +46,18 @@ $app->group("/admin", function () use ($app) {
                     ->build(true);
     }
     )
-        ->add(new LoggedMiddleware());
+        ->add(new LoggedMiddleware(true));
 
     $app->post('/login', function () {
+        $distUrl = 'Location: ';
         try {
-            Authenticator::login($_POST['login'], $_POST['password']);
-            header("Location: /admin");
-            exit;
+            Authenticator::login($_POST['login'], $_POST['password'], true);
+            $distUrl .= '/admin';
         } catch (Exception $e) {
             $this->flash->addMessage('error', $e->getMessage());
-            header('Location: /admin/login');
+            $distUrl .= '/login';
+        } finally {
+            header($distUrl);
             exit;
         }
 

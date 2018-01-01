@@ -17,12 +17,12 @@ class Authenticator
 {
     const SESSION_CODE = "UserLogged";
 
-    public static function login($login, $password)
+    public static function login($login, $password, $isAdmin = false)
     {
         $userDAO = new UserDAO();
         $user = $userDAO->getByLogin($login);
         if (isset($user) && password_verify($password, $user->getDespassword())) {
-            if($user->getInadmin() != 1){
+            if ($user->getInadmin() != 1 && $isAdmin) {
                 throw new \Exception("Você não tem autorização!");
             } else {
                 $_SESSION[Authenticator::SESSION_CODE] = serialize($user);
@@ -33,12 +33,13 @@ class Authenticator
 
     }
 
-    public static function reLogin($login, $hashPassword){
+    public static function reLogin($login, $hashPassword, $isAdmin = false)
+    {
         $userDAO = new UserDAO();
         $user = $userDAO->getByLogin($login);
 
-        if (isset($user) && $hashPassword == $user->getDespassword() && $user->getInadmin() == 1) {
-            if($user->getInadmin() != 1){
+        if (isset($user) && $hashPassword == $user->getDespassword()) {
+            if ($user->getInadmin() != 1 && $isAdmin) {
                 throw new \Exception("Você não tem autorização!");
             } else {
                 $_SESSION[Authenticator::SESSION_CODE] = serialize($user);

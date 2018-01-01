@@ -17,6 +17,13 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class LoggedMiddleware
 {
+    private $isAdmin;
+
+    public function __construct($isAdmin)
+    {
+        $this->isAdmin = $isAdmin;
+    }
+
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, $next)
     {
         if(isset($_SESSION[Authenticator::SESSION_CODE])){
@@ -24,8 +31,12 @@ class LoggedMiddleware
 
             if ($user instanceof User) {
                 try {
-                    Authenticator::reLogin($user->getDeslogin(), $user->getDespassword());
-                    return $response->withHeader('Location', '/admin');
+                    Authenticator::reLogin($user->getDeslogin(), $user->getDespassword(), $this->isAdmin);
+                    if($this->isAdmin){
+                        return $response->withHeader('Location', '/admin');
+                    } else {
+                        return $response->withHeader('Location', '/checkout');
+                    }
                 } catch (Exception $e) {
                     $request->withAttribute('error', $e->getMessage());
                 }

@@ -37,8 +37,11 @@ class AuthMiddleware
         } else {
             if($this->isAdmin){
                 return $response->withHeader('Location', '/admin/login');
+            } else {
+                return $response->withHeader('Location', '/login');
             }
         }
+
         return $next($request, $response);
     }
 }
