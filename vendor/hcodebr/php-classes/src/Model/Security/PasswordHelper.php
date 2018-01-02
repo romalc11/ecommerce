@@ -27,8 +27,12 @@ class PasswordHelper
             $recoveryData = $userDAO->createRecovery($user->getIduser(), $_SERVER["REMOTE_ADDR"]);
             if (isset($recoveryData)) {
                 $code = base64_encode(openssl_encrypt($recoveryData['idrecovery'], "AES-256-CBC", self::SECRET, 0, self::SECRETIV));
-                $link = "http://localhost/admin/forgot/reset?code=$code";
+                if($user->getInadmin() == 1){
+                    $link = "http://localhost/admin/forgot/reset?code=$code";
+                } else {
+                    $link = "http://localhost/login/forgot/reset?code=$code";
 
+                }
                 $mailer = new Mailer($user->getPerson()->getDesemail(), $user->getPerson()->getDesperson(), 'Redefinir Senha da Hcode Store', 'forgot', array(
                     'name' => $user->getPerson()->getDesperson(),
                     'link' => $link

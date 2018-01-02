@@ -17,6 +17,7 @@ use Hcode\Middleware\CartMiddleware;
 use Hcode\Middleware\LoggedMiddleware;
 use Hcode\Model\Address;
 use Hcode\Model\Security\Authenticator;
+use Hcode\Model\Security\PasswordHelper;
 use Hcode\Util\FreightCalculator;
 use Hcode\Util\PagingManager;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -68,50 +69,113 @@ $app->group('/', function () use ($app) {
     }
     );
 
-    $app->get('login', function () {
+    $app->group('login', function () use ($app) {
 
-        $registerValues = [
-            'desperson' => '',
-            'desemail' => '',
-            'nrphone' => '',
+        $app->get('', function () {
 
-        ];
+            $registerValues = [
+                'desperson' => '',
+                'desemail' => '',
+                'nrphone' => '',
 
-        if (isset($_SESSION['registerValues'])) {
-            $registerValues = array_merge($registerValues, $_SESSION['registerValues']);
-            unset($_SESSION['registerValues']);
+            ];
+
+            if (isset($_SESSION['registerValues'])) {
+                $registerValues = array_merge($registerValues, $_SESSION['registerValues']);
+                unset($_SESSION['registerValues']);
+            }
+
+            (new PageBuilder())->withHeader()
+                               ->withFooter()
+                               ->withData(
+                                   [
+                                       'error' => $this->flash->getFirstMessage('error'),
+                                       'register' => $registerValues,
+                                       'registerError' => $this->flash->getFirstMessage('registerError')
+                                   ]
+                               )
+                               ->withTpl('login')
+                               ->build();
         }
+        );
 
-        (new PageBuilder())->withHeader()
-                           ->withFooter()
-                           ->withData(
-                               [
-                                   'error' => $this->flash->getFirstMessage('error'),
-                                   'register' => $registerValues,
-                                   'registerError' => $this->flash->getFirstMessage('registerError')
-                               ]
-                           )
-                           ->withTpl('login')
-                           ->build();
+        $app->post('', function (Request $request) {
+            $distUrl = 'Location: ';
+
+            try {
+                Authenticator::login($request->getParsedBody()['login'], $request->getParsedBody()['password']);
+                $distUrl .= '/checkout';
+            } catch (Exception $e) {
+                $this->flash->addMessage('error', $e->getMessage());
+                $distUrl .= '/login';
+            } finally {
+                header($distUrl);
+                exit;
+            }
+        }
+        );
+
+        $app->get('/forgot', function () {
+
+            (new PageBuilder())->withTpl('forgot')
+                               ->withHeader()
+                               ->withFooter()
+                               ->build();
+
+        }
+        );
+
+        $app->get('/forgot/sent', function () {
+            (new PageBuilder())->withTpl('forgot-sent')
+                               ->withHeader()
+                               ->withFooter()
+                               ->build();
+        }
+        );
+
+        $app->post('/forgot', function () {
+            PasswordHelper::createRecovery($_POST['email']);
+            header("Location: /login/forgot/sent");
+            exit;
+        }
+        );
+
+        $app->get('/forgot/reset', function () {
+
+            $data = PasswordHelper::validRecovery($_GET['code']);
+
+            if (isset($data)) {
+                (new PageBuilder())->withData(['name' => $data['desperson'], 'code' => $_GET['code']])
+                                   ->withHeader()
+                                   ->withFooter()
+                                   ->withTpl('forgot-reset')
+                                   ->build();
+
+            } else {
+                throw new \Exception("Não foi possivel recuperar a senha");
+            }
+
+        }
+        );
+
+        $app->post('/forgot/reset', function () {
+            $data = PasswordHelper::validRecovery($_POST['code']);
+
+            if (isset($data)) {
+                PasswordHelper::recovery($data['idrecovery'], $data['iduser'], $_POST['password']);
+                (new PageBuilder())->withTpl("forgot-reset-success")
+                                   ->withHeader()
+                                   ->withFooter()
+                                   ->build();
+            }
+        }
+        );
+
+
     }
     )
         ->add(new LoggedMiddleware(false));
 
-    $app->post('login', function (Request $request) {
-        $distUrl = 'Location: ';
-
-        try {
-            Authenticator::login($request->getParsedBody()['login'], $request->getParsedBody()['password']);
-            $distUrl .= '/checkout';
-        } catch (Exception $e) {
-            $this->flash->addMessage('error', $e->getMessage());
-            $distUrl .= '/login';
-        } finally {
-            header($distUrl);
-            exit;
-        }
-    }
-    );
 
     $app->get('logout', function () {
         Authenticator::logout();
@@ -156,6 +220,7 @@ $app->group('/', function () use ($app) {
         exit;
     }
     );
+
 
     $app->get('checkout', function () {
         (new PageBuilder())->withHeader()
