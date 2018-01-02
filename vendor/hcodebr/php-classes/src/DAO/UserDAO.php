@@ -28,6 +28,8 @@ class UserDAO extends DAO
 
     public function save($data = array()): ?User
     {
+        $data['despassword'] = password_hash($data['despassword'], PASSWORD_DEFAULT);
+
         $results = $this->select("CALL sp_users_save(:desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", $this->formatParameters($data));
 
         if (count($results) > 0) {
@@ -59,6 +61,11 @@ class UserDAO extends DAO
             return UserFactory::create($results[0]);
         }
         return NULL;
+    }
+
+    public function checkUserExist($deslogin){
+        $user = $this->getByLogin($deslogin);
+        return isset($user);
     }
 
 

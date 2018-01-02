@@ -54,9 +54,8 @@ $app->group('/users', function () use ($app) {
     );
 
     $app->post('/create', function () {
-        $_POST['despassword'] = password_hash($_POST['despassword'], PASSWORD_DEFAULT);
-        $_POST["inadmin"] = (isset($_POST["inadmin"])) ? 1 : 0;
 
+        $_POST["inadmin"] = (isset($_POST["inadmin"])) ? 1 : 0;
         (new UserDAO())->save($_POST);
 
         header("Location: /admin/users");

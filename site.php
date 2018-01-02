@@ -10,6 +10,7 @@ use Hcode\Builder\PageBuilder;
 use Hcode\DAO\CartDAO;
 use Hcode\DAO\CategoryDAO;
 use Hcode\DAO\ProductDAO;
+use Hcode\DAO\UserDAO;
 use Hcode\Factory\CartFactory;
 use Hcode\Middleware\AuthMiddleware;
 use Hcode\Middleware\CartMiddleware;
@@ -68,11 +69,26 @@ $app->group('/', function () use ($app) {
     );
 
     $app->get('login', function () {
+
+        $registerValues = [
+            'desperson' => '',
+            'desemail' => '',
+            'nrphone' => '',
+
+        ];
+
+        if (isset($_SESSION['registerValues'])) {
+            $registerValues = array_merge($registerValues, $_SESSION['registerValues']);
+            unset($_SESSION['registerValues']);
+        }
+
         (new PageBuilder())->withHeader()
                            ->withFooter()
                            ->withData(
                                [
-                                   'error' => $this->flash->getFirstMessage('error')
+                                   'error' => $this->flash->getFirstMessage('error'),
+                                   'register' => $registerValues,
+                                   'registerError' => $this->flash->getFirstMessage('registerError')
                                ]
                            )
                            ->withTpl('login')
@@ -104,12 +120,50 @@ $app->group('/', function () use ($app) {
     }
     );
 
+    $app->post('register', function (Request $request) {
+
+        $body = $request->getParsedBody();
+
+        if (!isset($body['desperson']) || trim($body['desperson']) == '' || !isset($body['despassword']) || trim($body['despassword']) == '') {
+            $this->flash->addMessage('registerError', 'Por favor preencha os campos obrigatórios!');
+
+            unset($body['despassword']);
+
+            $_SESSION['registerValues'] = $body;
+
+            header('Location: /login');
+            exit;
+        }
+
+        $userDAO = new UserDAO();
+
+        if ($userDAO->checkUserExist($body['desemail'])) {
+            $this->flash->addMessage('registerError', 'Esse email já esta sendo utilizado!');
+
+            unset($body['despassword']);
+            $_SESSION['registerValues'] = $body;
+            header('Location: /login');
+            exit;
+        }
+
+        $body['deslogin'] = $body['desemail'];
+        $body['inadmin'] = 0;
+
+        $userDAO->save($body);
+
+        Authenticator::login($body['deslogin'], $body['despassword']);
+        header('Location: /checkout');
+        exit;
+    }
+    );
+
     $app->get('checkout', function () {
         (new PageBuilder())->withHeader()
                            ->withFooter()
                            ->withData(
                                [
-                                   'cart' => CartFactory::createBySession()->getDirectValues(),
+                                   'cart' => CartFactory::createBySession()
+                                                        ->getDirectValues(),
                                    'address' => (new Address())->getDirectValues()
                                ]
                            )
